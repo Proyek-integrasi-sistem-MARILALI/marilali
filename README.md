@@ -4,7 +4,7 @@ Proyek Capstone MARILALI
 
 Travel Planner APP
 Member:
-- Dave
+- Dave (Excitemax)
 - Sindy
 - Benartdo
 - Liana
