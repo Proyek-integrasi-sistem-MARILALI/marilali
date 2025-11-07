@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Test Login API</title></head>
+<body>
+  <h2>Login ke Travel Planner</h2>
+  <input id="email" placeholder="Email"><br>
+  <input id="password" placeholder="Password" type="password"><br>
+  <button onclick="login()">Login</button>
+
+  <script>
+  async function login() {
+    const res = await fetch("http://127.0.0.1:8000/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: document.getElementById("email").value,
+        password: document.getElementById("password").value
+      })
+    });
+    const data = await res.json();
+    console.log(data);
+    alert(JSON.stringify(data));
+  }
+  </script>
+</body>
+</html>
