@@ -137,4 +137,26 @@ class UserPreference(Base):
 
     user = relationship("User", backref="preference")
 
+class FavoriteDestination(Base):
+    __tablename__ = "favorite_destinations"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
+    destination_id = Column(Integer, ForeignKey("destinations.id", ondelete="CASCADE"))
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    user = relationship("User", backref="favorite_destinations")
+    destination = relationship("Destination")
+
+class FavoriteItinerary(Base):
+    __tablename__ = "favorite_itineraries"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
+    itinerary_id = Column(Integer, ForeignKey("itineraries.id", ondelete="CASCADE"))
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    user = relationship("User", backref="favorite_itineraries")
+    itinerary = relationship("Itinerary")
+
 # Membuat semua tabel di database
