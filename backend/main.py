@@ -16,6 +16,7 @@ from services.user.router import router as user_router
 from services.itinerary.router import router as itinerary_router
 from services.user_preferences.router import router as pref_router
 from services.favorite.router import router as favorite_router
+from services.favorite_itinerary.router import router as favorite_itinerary_router
 
 
 # Inisialisasi aplikasi FastAPI
@@ -49,6 +50,7 @@ app.include_router(user_router, prefix="/user", tags=["User"])
 app.include_router(itinerary_router, prefix="/itineraries", tags=["Itineraries"])
 app.include_router(pref_router, prefix="/preferences", tags=["User Preferences"])
 app.include_router(favorite_router, prefix="/favorites", tags=["Favorites"])
+app.include_router(favorite_itinerary_router, prefix="/favorites/itineraries", tags=["Favorite Itineraries"])
 
 # Endpoint root
 @app.get("/", tags=["Root"])
