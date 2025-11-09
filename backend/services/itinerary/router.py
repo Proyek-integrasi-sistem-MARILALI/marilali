@@ -41,3 +41,26 @@ def delete_itinerary(
     current_user: User = Depends(get_current_user)
 ):
     return controller.delete_itinerary(itinerary_id, current_user.id, db)
+
+@router.get("/history", response_model=list[ItineraryResponse])
+def get_history(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Mendapatkan daftar itinerary yang sudah selesai (status = completed).
+    """
+    return controller.get_completed_itineraries(current_user.id, db)
+
+
+@router.put("/{itinerary_id}/complete", response_model=ItineraryResponse)
+def complete_itinerary(
+    itinerary_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Menandai itinerary sebagai selesai.
+    """
+    return controller.mark_itinerary_as_completed(itinerary_id, current_user.id, db)
+
