@@ -124,4 +124,17 @@ class Accommodation(Base):
     
     def __repr__(self):
         return f"<Accommodation(id={self.id}, name='{self.name}', location='{self.location}')>"
+    
+class UserPreference(Base):
+    __tablename__ = "user_preferences"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), unique=True)
+    preferred_category = Column(String, nullable=True)
+    min_budget = Column(Integer, nullable=True)
+    max_budget = Column(Integer, nullable=True)
+    weather_preference = Column(String, nullable=True)
+
+    user = relationship("User", backref="preference")
+
 # Membuat semua tabel di database
