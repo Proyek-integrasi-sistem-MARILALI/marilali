@@ -83,3 +83,25 @@ def mark_itinerary_as_completed(itinerary_id: int, user_id: int, db: Session):
 #         "accommodations": accommodations
 #     }
 
+def get_completed_itineraries(user_id: int, db: Session):
+    history = db.query(Itinerary).filter(
+        Itinerary.user_id == user_id,
+        Itinerary.status == "completed"
+    ).all()
+
+    return history
+
+def mark_itinerary_complete(itinerary_id: int, user_id: int, db: Session):
+    itinerary = db.query(Itinerary).filter(
+        Itinerary.id == itinerary_id,
+        Itinerary.user_id == user_id
+    ).first()
+
+    if not itinerary:
+        raise HTTPException(status_code=404, detail="Itinerary tidak ditemukan")
+
+    itinerary.status = "completed"
+    db.commit()
+    db.refresh(itinerary)
+
+    return {"message": "Itinerary ditandai selesai", "status": itinerary.status}

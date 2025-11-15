@@ -64,3 +64,20 @@ def complete_itinerary(
     """
     return controller.mark_itinerary_as_completed(itinerary_id, current_user.id, db)
 
+@router.get("/history", response_model=list[ItineraryResponse])
+def get_history_itineraries(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Menampilkan semua itinerary yang sudah selesai (status = 'completed').
+    """
+    return controller.get_completed_itineraries(current_user.id, db)
+
+@router.put("/{itinerary_id}/complete")
+def mark_complete(
+    itinerary_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    return controller.mark_itinerary_complete(itinerary_id, current_user.id, db)
