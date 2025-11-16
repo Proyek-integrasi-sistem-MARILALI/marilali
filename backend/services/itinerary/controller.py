@@ -21,16 +21,25 @@ def get_all_itineraries(user_id: int, db: Session):
 
 
 def get_itinerary_by_id(itinerary_id: int, user_id: int, db: Session):
-    itinerary = db.query(Itinerary).filter(Itinerary.id == itinerary_id, Itinerary.user_id == user_id).first()
+    itinerary = db.query(Itinerary).filter(
+        Itinerary.id == itinerary_id,
+        Itinerary.user_id == user_id
+    ).first()
+
     if not itinerary:
         raise HTTPException(status_code=404, detail="Itinerary tidak ditemukan")
     return itinerary
 
 
 def delete_itinerary(itinerary_id: int, user_id: int, db: Session):
-    itinerary = db.query(Itinerary).filter(Itinerary.id == itinerary_id, Itinerary.user_id == user_id).first()
+    itinerary = db.query(Itinerary).filter(
+        Itinerary.id == itinerary_id,
+        Itinerary.user_id == user_id
+    ).first()
+
     if not itinerary:
         raise HTTPException(status_code=404, detail="Itinerary tidak ditemukan")
+
     db.delete(itinerary)
     db.commit()
     return {"message": "Itinerary berhasil dihapus"}
@@ -38,7 +47,7 @@ def delete_itinerary(itinerary_id: int, user_id: int, db: Session):
 
 def get_completed_itineraries(user_id: int, db: Session):
     """
-    Mengambil semua itinerary dengan status 'completed' milik user.
+    Mengambil semua itinerary yang statusnya 'completed'.
     """
     return db.query(Itinerary).filter(
         Itinerary.user_id == user_id,
@@ -46,52 +55,10 @@ def get_completed_itineraries(user_id: int, db: Session):
     ).all()
 
 
-def mark_itinerary_as_completed(itinerary_id: int, user_id: int, db: Session):
-    """
-    Mengubah status itinerary menjadi 'completed'.
-    """
-    itinerary = db.query(Itinerary).filter(
-        Itinerary.id == itinerary_id,
-        Itinerary.user_id == user_id
-    ).first()
-    if not itinerary:
-        raise HTTPException(status_code=404, detail="Itinerary tidak ditemukan")
-
-    itinerary.status = "completed"
-    db.commit()
-    db.refresh(itinerary)
-    return itinerary
-
-
-# def get_itinerary_details(itinerary_id: int, user_id: int, db: Session):
-#     """
-#     Mengambil detail itinerary beserta penerbangan dan akomodasi terkait.
-#     """
-#     itinerary = db.query(Itinerary).filter(
-#         Itinerary.id == itinerary_id,
-#         Itinerary.user_id == user_id
-#     ).first()
-#     if not itinerary:
-#         raise HTTPException(status_code=404, detail="Itinerary tidak ditemukan")
-
-#     flights = db.query(Flight).filter(Flight.itinerary_id == itinerary_id).all()
-#     accommodations = db.query(Accommodation).filter(Accommodation.itinerary_id == itinerary_id).all()
-
-#     return {
-#         "itinerary": itinerary,
-#         "flights": flights,
-#         "accommodations": accommodations
-#     }
-
-def get_completed_itineraries(user_id: int, db: Session):
-    history = db.query(Itinerary).filter(
-        Itinerary.user_id == user_id,
-        Itinerary.status == "completed"
-    ).all()
-
-    return history
-
 def mark_itinerary_complete(itinerary_id: int, user_id: int, db: Session):
+    """
+    Menandai itinerary sebagai selesai.
+    """
     itinerary = db.query(Itinerary).filter(
         Itinerary.id == itinerary_id,
         Itinerary.user_id == user_id
