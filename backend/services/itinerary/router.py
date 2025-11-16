@@ -62,3 +62,14 @@ def mark_itinerary_complete(
     current_user: User = Depends(get_current_user)
 ):
     return controller.mark_itinerary_complete(itinerary_id, current_user.id, db)
+
+@router.post("/{itinerary_id}/copy", response_model=ItineraryResponse)
+def copy_itinerary(
+    itinerary_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Menyalin itinerary beserta flights dan accommodations.
+    """
+    return controller.copy_itinerary(itinerary_id, current_user.id, db)
