@@ -148,6 +148,7 @@ class FavoriteDestination(Base):
     user = relationship("User", backref="favorite_destinations")
     destination = relationship("Destination")
 
+
 class FavoriteItinerary(Base):
     __tablename__ = "favorite_itineraries"
 
