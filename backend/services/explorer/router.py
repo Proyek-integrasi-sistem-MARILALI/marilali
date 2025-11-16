@@ -22,3 +22,7 @@ def get_destination_detail(destination_id: int, db: Session = Depends(get_db)):
     if not destination:
         raise HTTPException(status_code=404, detail="Destinasi tidak ditemukan")
     return destination
+
+@router.get("/public-itineraries", response_model=list[ItineraryResponse])
+def list_public_itineraries(db: Session = Depends(get_db)):
+    return controller.get_public_itineraries(db)

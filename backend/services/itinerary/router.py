@@ -69,3 +69,11 @@ def delete_itinerary(
     current_user: User = Depends(get_current_user)
 ):
     return controller.delete_itinerary(itinerary_id, current_user.id, db)
+
+@router.put("/{itinerary_id}/share", response_model=ItineraryResponse)
+def share_itinerary_route(
+    itinerary_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    return controller.share_itinerary(itinerary_id, current_user.id, db)

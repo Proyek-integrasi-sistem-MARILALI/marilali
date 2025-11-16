@@ -129,3 +129,23 @@ def copy_itinerary(itinerary_id: int, user_id: int, db: Session):
     db.commit()
     db.refresh(new_itinerary)
     return new_itinerary
+
+
+def share_itinerary(itinerary_id: int, user_id: int, db: Session):
+    itinerary = db.query(Itinerary).filter(
+        Itinerary.id == itinerary_id,
+        Itinerary.user_id == user_id
+    ).first()
+
+    if not itinerary:
+        raise HTTPException(status_code=404, detail="Itinerary tidak ditemukan")
+
+    itinerary.is_public = True
+    db.commit()
+    db.refresh(itinerary)
+
+    return itinerary
+
+
+def get_public_itineraries(db: Session):
+    return db.query(Itinerary).filter(Itinerary.is_public == True).all()
