@@ -5,10 +5,11 @@ Berisi definisi model ORM untuk tabel dalam database.
 Model ini digunakan oleh SQLAlchemy untuk membuat dan mengelola tabel secara otomatis.
 """
 
-from sqlalchemy import Column, Integer, String, ForeignKey, Text, Date, DateTime, func
+from sqlalchemy import Column, Integer, String, ForeignKey, Text, Date, DateTime, Boolean, func
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from database.connection import Base
+
 
 
 class User(Base):
@@ -83,6 +84,8 @@ class Itinerary(Base):
     budget = Column(Integer, nullable=True)
     status = Column(String, default="planned")
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    is_public = Column(Boolean, default=False)
+
 
     user = relationship("User", backref="itineraries")
     flights = relationship("Flight", back_populates="itinerary", cascade="all, delete-orphan")

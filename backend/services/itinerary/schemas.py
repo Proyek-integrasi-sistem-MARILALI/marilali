@@ -44,3 +44,10 @@ class ItineraryResponse(ItineraryCreate):
 
     class Config:
         orm_mode = True
+        
+class ItineraryShareResponse(BaseModel):
+    id: int
+    is_public: bool
+
+    class Config:
+        orm_mode = True
