@@ -2,42 +2,55 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 from database.models import Destination, Review
 
-def recommend_destinations_by_budget(db: Session, budget: int, sort: str = "cheapest"):
-    """
-    Mengembalikan destinasi yang sesuai budget user,
-    bisa dipakai oleh Explorer & Planner.
-    """
+def generate_recommendations(data, db: Session):
 
-    query = db.query(Destination).filter(Destination.price <= budget)
+    # 1. Filter lokasi
+    query = db.query(Destination).filter(
+        Destination.location.ilike(f"%{data.location_area}%")
+    )
 
-    # Sorting opsional
-    if sort == "cheapest":
-        query = query.order_by(Destination.price.asc())
-    elif sort == "rating":
-        query = query.outerjoin(Review).group_by(Destination.id).order_by(
-            func.avg(Review.rating).desc()
-        )
-    elif sort == "popular":
-        query = query.outerjoin(Review).group_by(Destination.id).order_by(
-            func.count(Review.id).desc()
-        )
+    # 2. Filter kategori
+    if data.preferred_categories:
+        query = query.filter(Destination.category.in_(data.preferred_categories))
 
     destinations = query.all()
 
-    results = []
-    for d in destinations:
-        avg_rating = db.query(func.avg(Review.rating)) \
-            .filter(Review.destination_id == d.id).scalar()
+    result = []
+    total_min_cost = 0
 
-        results.append({
+    for d in destinations:
+
+        rating = (
+            db.query(func.avg(Review.rating))
+            .filter(Review.destination_id == d.id)
+            .scalar()
+        ) or 0
+
+        ticket_price = d.price or 0
+
+        # RULE: jangan kasih destinasi mahal kalau budget kecil
+        if ticket_price > data.max_budget * 0.5:
+            continue
+
+        est_cost = ticket_price + 50000 + 5000  # bensin + parkir
+
+        result.append({
             "id": d.id,
             "name": d.name,
             "category": d.category,
             "location": d.location,
-            "price": d.price,
-            "description": d.description,
+            "price": ticket_price,
             "image_url": d.image_url,
-            "average_rating": round(avg_rating, 2) if avg_rating else 0.0,
+            "rating": round(rating, 1),
+            "estimated_cost": est_cost
         })
 
-    return results
+        total_min_cost += est_cost
+
+    # Sort by cheapest
+    result = sorted(result, key=lambda x: x["estimated_cost"])
+
+    return {
+        "total_min_cost": total_min_cost,
+        "destinations": result
+    }
