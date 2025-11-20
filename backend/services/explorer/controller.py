@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-from database.models import Destination, Review
+from database.models import Destination, Review, Itinerary, FavoriteItinerary, Flight, Accommodation
+
 
 def get_all_destinations(db: Session):
     """
@@ -56,3 +57,35 @@ def get_destination_by_id(destination_id: int, db: Session):
         "average_rating": round(avg_rating, 2) if avg_rating else 0.0,
         "reviews": destination.reviews or []
     }
+
+def get_public_itineraries(db: Session, page: int, limit: int, sort: str, search: str):
+    query = db.query(Itinerary).filter(Itinerary.is_public == True)
+
+    # 🔍 Search by title
+    if search:
+        query = query.filter(Itinerary.title.ilike(f"%{search}%"))
+
+    # 🔽 Sorting
+    if sort == "newest":
+        query = query.order_by(Itinerary.created_at.desc())
+    elif sort == "favorites":
+        query = query.outerjoin(FavoriteItinerary).group_by(Itinerary.id).order_by(
+            func.count(FavoriteItinerary.id).desc()
+        )
+    elif sort == "duration":
+        query = query.order_by((Itinerary.end_date - Itinerary.start_date).asc())
+
+    # 📄 Pagination
+    total = query.count()
+    itineraries = query.offset((page - 1) * limit).limit(limit).all()
+
+    return {"total": total, "page": page, "limit": limit, "data": itineraries}
+
+
+def get_single_public_itinerary(itinerary_id: int, db: Session):
+    itinerary = db.query(Itinerary).filter(
+        Itinerary.id == itinerary_id,
+        Itinerary.is_public == True
+    ).first()
+
+    return itinerary
