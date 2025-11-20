@@ -2,20 +2,20 @@
 Module: database.models
 Deskripsi:
 Berisi definisi model ORM untuk tabel dalam database.
-Model ini digunakan oleh SQLAlchemy untuk membuat dan mengelola tabel secara otomatis.
 """
 
-from sqlalchemy import Column, Integer, String, ForeignKey, Text, Date, DateTime, Boolean, func
+from sqlalchemy import (
+    Column, Integer, String, ForeignKey, Text, Date, DateTime, Boolean, func
+)
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from database.connection import Base
 
 
-
+# ==========================
+#        USER
+# ==========================
 class User(Base):
-    """
-    Model User merepresentasikan data pengguna dalam sistem Travel Planner.
-    """
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -24,17 +24,21 @@ class User(Base):
     hashed_password = Column(String(255), nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 
-    # Relasi ke Review
+    # Relations
     reviews = relationship("Review", back_populates="user", cascade="all, delete")
+    preference = relationship("UserPreference", uselist=False, back_populates="user", cascade="all, delete")
+    itineraries = relationship("Itinerary", back_populates="user", cascade="all, delete")
+    favorite_destinations = relationship("FavoriteDestination", back_populates="user", cascade="all, delete")
+    favorite_itineraries = relationship("FavoriteItinerary", back_populates="user", cascade="all, delete")
 
     def __repr__(self):
         return f"<User(id={self.id}, email={self.email})>"
 
 
+# ==========================
+#     DESTINATION
+# ==========================
 class Destination(Base):
-    """
-    Model Destination menyimpan data destinasi wisata.
-    """
     __tablename__ = "destinations"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -46,17 +50,18 @@ class Destination(Base):
     image_url = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
-    # Relasi ke Review
-    reviews = relationship("Review", backref="destination", cascade="all, delete")
+    # Relations
+    reviews = relationship("Review", back_populates="destination", cascade="all, delete")
+    favored_by = relationship("FavoriteDestination", back_populates="destination", cascade="all, delete")
 
     def __repr__(self):
         return f"<Destination(id={self.id}, name={self.name})>"
 
 
+# ==========================
+#         REVIEW
+# ==========================
 class Review(Base):
-    """
-    Model Review menyimpan ulasan pengguna terhadap destinasi wisata.
-    """
     __tablename__ = "reviews"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -66,18 +71,22 @@ class Review(Base):
     comment = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
-    # Relasi balik ke User
+    # Relations
     user = relationship("User", back_populates="reviews")
+    destination = relationship("Destination", back_populates="reviews")
 
     def __repr__(self):
-        return f"<Review(id={self.id}, rating={self.rating}, user_id={self.user_id})>"
-    
+        return f"<Review(id={self.id}, rating={self.rating})>"
 
+
+# ==========================
+#        ITINERARY
+# ==========================
 class Itinerary(Base):
     __tablename__ = "itineraries"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"))
     title = Column(String, nullable=False)
     start_date = Column(Date, nullable=False)
     end_date = Column(Date, nullable=False)
@@ -86,14 +95,20 @@ class Itinerary(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     is_public = Column(Boolean, default=False)
 
-
-    user = relationship("User", backref="itineraries")
+    # Relations
+    user = relationship("User", back_populates="itineraries")
     flights = relationship("Flight", back_populates="itinerary", cascade="all, delete-orphan")
     accommodations = relationship("Accommodation", back_populates="itinerary", cascade="all, delete-orphan")
+    activities = relationship("Activity", back_populates="itinerary", cascade="all, delete-orphan")
+    favored_by = relationship("FavoriteItinerary", back_populates="itinerary", cascade="all, delete")
 
     def __repr__(self):
-        return f"<Itinerary(id={self.id}, title='{self.title}', user_id={self.user_id})>"
+        return f"<Itinerary(id={self.id}, title='{self.title}')>"
 
+
+# ==========================
+#         FLIGHT
+# ==========================
 class Flight(Base):
     __tablename__ = "flights"
 
@@ -107,11 +122,14 @@ class Flight(Base):
     price = Column(Integer)
 
     itinerary = relationship("Itinerary", back_populates="flights")
-    
+
     def __repr__(self):
-        return f"<Flight(id={self.id}, airline='{self.airline}', from='{self.departure_city}', to='{self.arrival_city}')>"
-     
-    
+        return f"<Flight(id={self.id}, airline='{self.airline}')>"
+
+
+# ==========================
+#       ACCOMMODATION
+# ==========================
 class Accommodation(Base):
     __tablename__ = "accommodations"
 
@@ -124,10 +142,14 @@ class Accommodation(Base):
     price_per_night = Column(Integer)
 
     itinerary = relationship("Itinerary", back_populates="accommodations")
-    
+
     def __repr__(self):
-        return f"<Accommodation(id={self.id}, name='{self.name}', location='{self.location}')>"
-    
+        return f"<Accommodation(id={self.id}, name='{self.name}')>"
+
+
+# ==========================
+#     USER PREFERENCE
+# ==========================
 class UserPreference(Base):
     __tablename__ = "user_preferences"
 
@@ -138,8 +160,12 @@ class UserPreference(Base):
     max_budget = Column(Integer, nullable=True)
     weather_preference = Column(String, nullable=True)
 
-    user = relationship("User", backref="preference")
+    user = relationship("User", back_populates="preference")
 
+
+# ==========================
+#   FAVORITE DESTINATION
+# ==========================
 class FavoriteDestination(Base):
     __tablename__ = "favorite_destinations"
 
@@ -148,10 +174,13 @@ class FavoriteDestination(Base):
     destination_id = Column(Integer, ForeignKey("destinations.id", ondelete="CASCADE"))
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
-    user = relationship("User", backref="favorite_destinations")
-    destination = relationship("Destination")
+    user = relationship("User", back_populates="favorite_destinations")
+    destination = relationship("Destination", back_populates="favored_by")
 
 
+# ==========================
+#   FAVORITE ITINERARY
+# ==========================
 class FavoriteItinerary(Base):
     __tablename__ = "favorite_itineraries"
 
@@ -160,10 +189,13 @@ class FavoriteItinerary(Base):
     itinerary_id = Column(Integer, ForeignKey("itineraries.id", ondelete="CASCADE"))
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
-    user = relationship("User", backref="favorite_itineraries")
-    itinerary = relationship("Itinerary")
+    user = relationship("User", back_populates="favorite_itineraries")
+    itinerary = relationship("Itinerary", back_populates="favored_by")
 
 
+# ==========================
+#         ACTIVITY
+# ==========================
 class Activity(Base):
     __tablename__ = "activities"
 
@@ -175,6 +207,7 @@ class Activity(Base):
     cost = Column(Integer, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
-    itinerary = relationship("Itinerary", backref="activities")
+    itinerary = relationship("Itinerary", back_populates="activities")
 
-# Membuat semua tabel di database
+    def __repr__(self):
+        return f"<Activity(id={self.id}, title='{self.title}')>"
