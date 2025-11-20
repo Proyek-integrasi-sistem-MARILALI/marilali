@@ -1,12 +1,12 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-from database.models import Destination, Review, Itinerary, FavoriteItinerary, Flight, Accommodation
+from database.models import Destination, Review, Itinerary, FavoriteItinerary
 
 
+# ============================================
+# DESTINASI
+# ============================================
 def get_all_destinations(db: Session):
-    """
-    Mengambil seluruh destinasi beserta rata-rata rating-nya.
-    """
     destinations = db.query(Destination).all()
     results = []
 
@@ -33,10 +33,8 @@ def get_all_destinations(db: Session):
 
 
 def get_destination_by_id(destination_id: int, db: Session):
-    """
-    Mengambil detail satu destinasi berdasarkan ID.
-    """
     destination = db.query(Destination).filter(Destination.id == destination_id).first()
+
     if not destination:
         return None
 
@@ -58,6 +56,10 @@ def get_destination_by_id(destination_id: int, db: Session):
         "reviews": destination.reviews or []
     }
 
+
+# ============================================
+# PUBLIC ITINERARIES
+# ============================================
 def get_public_itineraries(db: Session, page: int, limit: int, sort: str, search: str):
     query = db.query(Itinerary).filter(Itinerary.is_public == True)
 
@@ -68,10 +70,14 @@ def get_public_itineraries(db: Session, page: int, limit: int, sort: str, search
     # 🔽 Sorting
     if sort == "newest":
         query = query.order_by(Itinerary.created_at.desc())
+
     elif sort == "favorites":
-        query = query.outerjoin(FavoriteItinerary).group_by(Itinerary.id).order_by(
-            func.count(FavoriteItinerary.id).desc()
+        query = (
+            query.outerjoin(FavoriteItinerary)
+            .group_by(Itinerary.id)
+            .order_by(func.count(FavoriteItinerary.id).desc())
         )
+
     elif sort == "duration":
         query = query.order_by((Itinerary.end_date - Itinerary.start_date).asc())
 
@@ -79,13 +85,43 @@ def get_public_itineraries(db: Session, page: int, limit: int, sort: str, search
     total = query.count()
     itineraries = query.offset((page - 1) * limit).limit(limit).all()
 
-    return {"total": total, "page": page, "limit": limit, "data": itineraries}
+    # ✨ Format supaya sesuai schema PublicItineraryListResponse
+    formatted = []
+    for it in itineraries:
+        formatted.append({
+            "id": it.id,
+            "title": it.title,
+            "start_date": it.start_date,
+            "end_date": it.end_date,
+            "budget": it.budget,
+            "created_at": it.created_at,
+        })
+
+    return {
+        "total": total,
+        "page": page,
+        "limit": limit,
+        "data": formatted
+    }
 
 
 def get_single_public_itinerary(itinerary_id: int, db: Session):
-    itinerary = db.query(Itinerary).filter(
+    it = db.query(Itinerary).filter(
         Itinerary.id == itinerary_id,
         Itinerary.is_public == True
     ).first()
 
-    return itinerary
+    if not it:
+        return None
+
+    # cocok dgn PublicItineraryResponse schema
+    return {
+        "id": it.id,
+        "title": it.title,
+        "description": getattr(it, "description", None),
+        "start_date": it.start_date,
+        "end_date": it.end_date,
+        "budget": it.budget,
+        "is_public": it.is_public,
+        "created_at": it.created_at,
+    }
