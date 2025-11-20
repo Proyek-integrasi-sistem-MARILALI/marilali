@@ -163,4 +163,18 @@ class FavoriteItinerary(Base):
     user = relationship("User", backref="favorite_itineraries")
     itinerary = relationship("Itinerary")
 
+
+class Activity(Base):
+    __tablename__ = "activities"
+
+    id = Column(Integer, primary_key=True, index=True)
+    itinerary_id = Column(Integer, ForeignKey("itineraries.id", ondelete="CASCADE"))
+    title = Column(String, nullable=False)
+    location = Column(String, nullable=True)
+    note = Column(Text, nullable=True)
+    cost = Column(Integer, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    itinerary = relationship("Itinerary", backref="activities")
+
 # Membuat semua tabel di database
