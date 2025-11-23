@@ -55,3 +55,20 @@ def delete_activity(
     current_user: User = Depends(get_current_user)
 ):
     return controller.delete_activity(activity_id, current_user.id, db)
+
+@router.put("/{activity_id}/complete", response_model=ActivityResponse)
+def complete_activity(
+    activity_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    return controller.mark_completed(activity_id, current_user.id, db)
+
+
+@router.post("/{activity_id}/duplicate", response_model=ActivityResponse)
+def duplicate_activity(
+    activity_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    return controller.duplicate_activity(activity_id, current_user.id, db)

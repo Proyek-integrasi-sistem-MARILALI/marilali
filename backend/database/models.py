@@ -205,9 +205,14 @@ class Activity(Base):
     location = Column(String, nullable=True)
     note = Column(Text, nullable=True)
     cost = Column(Integer, nullable=True)
+
+    # ➕ NEW FIELDS
+    is_completed = Column(Boolean, default=False)
+    day_number = Column(Integer, nullable=True)  # Hari ke-berapa
+    start_time = Column(DateTime, nullable=True)
+    end_time = Column(DateTime, nullable=True)
+    sort_order = Column(Integer, default=0)  # Untuk reordering
+
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
-    itinerary = relationship("Itinerary", back_populates="activities")
-
-    def __repr__(self):
-        return f"<Activity(id={self.id}, title='{self.title}')>"
+    itinerary = relationship("Itinerary", backref="activities")
