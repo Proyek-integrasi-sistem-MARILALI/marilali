@@ -6,6 +6,12 @@ class ActivityCreate(BaseModel):
     destination_id: int
     itinerary_id: int
 
+class ActivityUpdate(BaseModel):
+    title: Optional[str] = None
+    location: Optional[str] = None
+    note: Optional[str] = None
+    cost: Optional[int] = None
+
 class ActivityResponse(BaseModel):
     id: int
     title: str
