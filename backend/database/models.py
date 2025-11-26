@@ -5,16 +5,18 @@ Berisi definisi model ORM untuk tabel dalam database.
 """
 
 from sqlalchemy import (
-    Column, Integer, String, ForeignKey, Text, Date, DateTime, Boolean, func
+    Column, Integer, String, ForeignKey, Text, Date, DateTime,
+    Boolean, func
 )
 from sqlalchemy.orm import relationship
+from sqlalchemy.dialects.mysql import JSON
 from datetime import datetime
 from database.connection import Base
 
 
-# ==========================
-#        USER
-# ==========================
+# ============================================================
+#                         USER
+# ============================================================
 class User(Base):
     __tablename__ = "users"
 
@@ -35,9 +37,9 @@ class User(Base):
         return f"<User(id={self.id}, email={self.email})>"
 
 
-# ==========================
-#     DESTINATION
-# ==========================
+# ============================================================
+#                        DESTINATION
+# ============================================================
 class Destination(Base):
     __tablename__ = "destinations"
 
@@ -58,9 +60,9 @@ class Destination(Base):
         return f"<Destination(id={self.id}, name={self.name})>"
 
 
-# ==========================
-#         REVIEW
-# ==========================
+# ============================================================
+#                         REVIEW
+# ============================================================
 class Review(Base):
     __tablename__ = "reviews"
 
@@ -79,9 +81,9 @@ class Review(Base):
         return f"<Review(id={self.id}, rating={self.rating})>"
 
 
-# ==========================
-#        ITINERARY
-# ==========================
+# ============================================================
+#                        ITINERARY
+# ============================================================
 class Itinerary(Base):
     __tablename__ = "itineraries"
 
@@ -106,9 +108,9 @@ class Itinerary(Base):
         return f"<Itinerary(id={self.id}, title='{self.title}')>"
 
 
-# ==========================
-#         FLIGHT
-# ==========================
+# ============================================================
+#                         FLIGHT
+# ============================================================
 class Flight(Base):
     __tablename__ = "flights"
 
@@ -127,9 +129,9 @@ class Flight(Base):
         return f"<Flight(id={self.id}, airline='{self.airline}')>"
 
 
-# ==========================
-#       ACCOMMODATION
-# ==========================
+# ============================================================
+#                      ACCOMMODATION
+# ============================================================
 class Accommodation(Base):
     __tablename__ = "accommodations"
 
@@ -147,9 +149,9 @@ class Accommodation(Base):
         return f"<Accommodation(id={self.id}, name='{self.name}')>"
 
 
-# ==========================
-#     USER PREFERENCE
-# ==========================
+# ============================================================
+#                     USER PREFERENCE
+# ============================================================
 class UserPreference(Base):
     __tablename__ = "user_preferences"
 
@@ -163,9 +165,9 @@ class UserPreference(Base):
     user = relationship("User", back_populates="preference")
 
 
-# ==========================
-#   FAVORITE DESTINATION
-# ==========================
+# ============================================================
+#                FAVORITE DESTINATION
+# ============================================================
 class FavoriteDestination(Base):
     __tablename__ = "favorite_destinations"
 
@@ -178,9 +180,9 @@ class FavoriteDestination(Base):
     destination = relationship("Destination", back_populates="favored_by")
 
 
-# ==========================
-#   FAVORITE ITINERARY
-# ==========================
+# ============================================================
+#                FAVORITE ITINERARY
+# ============================================================
 class FavoriteItinerary(Base):
     __tablename__ = "favorite_itineraries"
 
@@ -193,9 +195,9 @@ class FavoriteItinerary(Base):
     itinerary = relationship("Itinerary", back_populates="favored_by")
 
 
-# ==========================
-#         ACTIVITY
-# ==========================
+# ============================================================
+#                          ACTIVITY
+# ============================================================
 class Activity(Base):
     __tablename__ = "activities"
 
@@ -207,12 +209,15 @@ class Activity(Base):
     cost = Column(Integer, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
-    # 🔥 NEW FIELDS
+    # NEW FIELDS (tidak ada yang dihapus)
     day_number = Column(Integer, nullable=True)
     start_time = Column(DateTime, nullable=True)
     end_time = Column(DateTime, nullable=True)
     sort_order = Column(Integer, default=0)
     is_completed = Column(Boolean, default=False)
+    extra = Column(JSON, default=dict)  # aman, non-mutable default
 
-    itinerary = relationship("Itinerary", backref="activities")
+    itinerary = relationship("Itinerary", back_populates="activities")
 
+    def __repr__(self):
+        return f"<Activity(id={self.id}, title='{self.title}')>"
