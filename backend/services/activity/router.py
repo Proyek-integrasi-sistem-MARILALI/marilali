@@ -72,3 +72,19 @@ def duplicate_activity(
     current_user: User = Depends(get_current_user)
 ):
     return controller.duplicate_activity(activity_id, current_user.id, db)
+
+@router.post("/manual", response_model=ActivityResponse)
+def create_manual_activity(
+    data: ActivityCreateManual,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    return controller.create_manual_activity(current_user.id, data, db)
+
+@router.put("/reorder")
+def reorder_activities(
+    data: ActivityReorderRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return controller.reorder_activities(current_user.id, data.items, db)

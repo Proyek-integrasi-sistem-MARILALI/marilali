@@ -173,3 +173,53 @@ def duplicate_activity(activity_id: int, user_id: int, db: Session):
     db.commit()
     db.refresh(new_activity)
     return new_activity
+
+
+def create_manual_activity(user_id: int, data, db: Session):
+    itinerary = db.query(Itinerary).filter(
+        Itinerary.id == data.itinerary_id,
+        Itinerary.user_id == user_id
+    ).first()
+
+    if not itinerary:
+        raise HTTPException(status_code=404, detail="Itinerary tidak ditemukan")
+
+    activity = Activity(
+        itinerary_id=data.itinerary_id,
+        title=data.title,
+        location=data.location,
+        note=data.note,
+        cost=data.cost,
+        day_number=data.day_number,
+        start_time=data.start_time,
+        end_time=data.end_time,
+        sort_order=data.sort_order or 0,
+        is_completed=False
+    )
+
+    db.add(activity)
+    db.commit()
+    db.refresh(activity)
+    return activity
+
+
+def reorder_activities(user_id: int, items, db: Session):
+    for item in items:
+        activity = db.query(Activity).filter(Activity.id == item.activity_id).first()
+
+        if not activity:
+            continue  # skip jika tidak ditemukan
+
+        # cek kepemilikan itinerary
+        itinerary = db.query(Itinerary).filter(
+            Itinerary.id == activity.itinerary_id,
+            Itinerary.user_id == user_id
+        ).first()
+
+        if not itinerary:
+            continue
+
+        activity.sort_order = item.sort_order
+
+    db.commit()
+    return {"message": "Urutan aktivitas berhasil diperbarui"}

@@ -25,7 +25,6 @@ class ActivityUpdate(BaseModel):
     is_completed: Optional[bool] = None
 
 
-
 class ActivityResponse(BaseModel):
     id: int
     title: str
@@ -44,3 +43,23 @@ class ActivityResponse(BaseModel):
     class Config:
         orm_mode = True
 
+
+class ActivityCreateManual(BaseModel):
+    itinerary_id: int
+    title: str
+    location: Optional[str] = None
+    note: Optional[str] = None
+    cost: Optional[int] = None
+    day_number: Optional[int] = None
+    start_time: Optional[datetime] = None
+    end_time: Optional[datetime] = None
+    sort_order: Optional[int] = 0
+
+
+class ActivityOrderUpdate(BaseModel):
+    activity_id: int
+    sort_order: int
+
+
+class ActivityReorderRequest(BaseModel):
+    items: list[ActivityOrderUpdate]
