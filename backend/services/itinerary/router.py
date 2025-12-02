@@ -77,3 +77,12 @@ def share_itinerary_route(
     current_user: User = Depends(get_current_user)
 ):
     return controller.share_itinerary(itinerary_id, current_user.id, db)
+
+
+@router.get("/{itinerary_id}/summary", response_model=ItinerarySummaryResponse)
+def get_summary(
+    itinerary_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    return controller.get_itinerary_summary(itinerary_id, current_user.id, db)

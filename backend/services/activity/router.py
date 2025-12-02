@@ -122,3 +122,12 @@ def complete_all(
     current_user: User = Depends(get_current_user)
 ):
     return controller.complete_all_activities(itinerary_id, current_user.id, db)
+
+@router.patch("/{itinerary_id}/reorder")
+def reorder_items(
+    itinerary_id: int,
+    items: list[ActivityReorder],
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    return controller.reorder_activities(itinerary_id, current_user.id, [item.dict() for item in items], db)

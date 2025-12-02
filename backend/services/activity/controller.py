@@ -315,3 +315,30 @@ def complete_all_activities(itinerary_id: int, user_id: int, db: Session):
     db.commit()
     return {"message": "Semua aktivitas berhasil ditandai selesai"}
 
+def reorder_activities(itinerary_id: int, user_id: int, items: list, db: Session):
+    """
+    items = list of { activity_id: int, sort_order: int }
+    """
+
+    # pastikan itinerary milik user
+    itinerary = db.query(Itinerary).filter(
+        Itinerary.id == itinerary_id,
+        Itinerary.user_id == user_id
+    ).first()
+
+    if not itinerary:
+        raise HTTPException(status_code=403, detail="Tidak punya akses ke itinerary")
+
+    # update semua sort order
+    for item in items:
+        activity = db.query(Activity).filter(
+            Activity.id == item["activity_id"],
+            Activity.itinerary_id == itinerary_id
+        ).first()
+
+        if activity:
+            activity.sort_order = item["sort_order"]
+
+    db.commit()
+
+    return {"message": "Urutan aktivitas berhasil diperbarui"}

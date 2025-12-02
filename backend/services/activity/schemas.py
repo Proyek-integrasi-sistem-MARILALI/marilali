@@ -63,3 +63,8 @@ class ActivityOrderUpdate(BaseModel):
 
 class ActivityReorderRequest(BaseModel):
     items: list[ActivityOrderUpdate]
+
+
+class ActivityReorder(BaseModel):
+    activity_id: int
+    sort_order: int
