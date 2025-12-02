@@ -223,3 +223,46 @@ def reorder_activities(user_id: int, items, db: Session):
 
     db.commit()
     return {"message": "Urutan aktivitas berhasil diperbarui"}
+
+
+def mark_uncompleted(activity_id: int, user_id: int, db: Session):
+    activity = db.query(Activity).filter(Activity.id == activity_id).first()
+    if not activity:
+        raise HTTPException(status_code=404, detail="Aktivitas tidak ditemukan")
+
+    itinerary = db.query(Itinerary).filter(
+        Itinerary.id == activity.itinerary_id,
+        Itinerary.user_id == user_id
+    ).first()
+
+    if not itinerary:
+        raise HTTPException(status_code=403, detail="Tidak punya akses")
+
+    activity.is_completed = False
+    db.commit()
+    db.refresh(activity)
+    return activity
+
+def reset_day(itinerary_id: int, day_number: int, user_id: int, db: Session):
+    # cek itinerary milik user
+    itinerary = db.query(Itinerary).filter(
+        Itinerary.id == itinerary_id,
+        Itinerary.user_id == user_id
+    ).first()
+
+    if not itinerary:
+        raise HTTPException(status_code=403, detail="Tidak punya akses ke itinerary")
+
+    activities = db.query(Activity).filter(
+        Activity.itinerary_id == itinerary_id,
+        Activity.day_number == day_number
+    ).all()
+
+    if not activities:
+        raise HTTPException(status_code=404, detail="Tidak ada aktivitas pada hari ini")
+
+    for a in activities:
+        a.is_completed = False
+
+    db.commit()
+    return {"message": "Semua aktivitas hari ini berhasil di-reset"}

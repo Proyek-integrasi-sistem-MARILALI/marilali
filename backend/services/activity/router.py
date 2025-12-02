@@ -88,3 +88,21 @@ def reorder_activities(
     current_user: User = Depends(get_current_user),
 ):
     return controller.reorder_activities(current_user.id, data.items, db)
+
+
+@router.patch("/{activity_id}/uncomplete", response_model=ActivityResponse)
+def uncomplete_activity(
+    activity_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    return controller.mark_uncompleted(activity_id, current_user.id, db)
+
+@router.patch("/{itinerary_id}/day/{day_number}/reset")
+def reset_day(
+    itinerary_id: int,
+    day_number: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    return controller.reset_day(itinerary_id, day_number, current_user.id, db)
