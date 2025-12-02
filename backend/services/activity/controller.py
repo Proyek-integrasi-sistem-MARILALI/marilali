@@ -266,3 +266,52 @@ def reset_day(itinerary_id: int, day_number: int, user_id: int, db: Session):
 
     db.commit()
     return {"message": "Semua aktivitas hari ini berhasil di-reset"}
+
+def reset_itinerary(itinerary_id: int, user_id: int, db: Session):
+    # cek itinerary milik user
+    itinerary = db.query(Itinerary).filter(
+        Itinerary.id == itinerary_id,
+        Itinerary.user_id == user_id
+    ).first()
+
+    if not itinerary:
+        raise HTTPException(status_code=403, detail="Tidak punya akses ke itinerary")
+
+    activities = db.query(Activity).filter(
+        Activity.itinerary_id == itinerary_id
+    ).all()
+
+    if not activities:
+        return {"message": "Tidak ada aktivitas untuk di-reset"}
+
+    for a in activities:
+        a.is_completed = False
+
+    db.commit()
+    return {"message": "Semua aktivitas berhasil direset"}
+
+def complete_all_activities(itinerary_id: int, user_id: int, db: Session):
+    # Pastikan itinerary milik user
+    itinerary = db.query(Itinerary).filter(
+        Itinerary.id == itinerary_id,
+        Itinerary.user_id == user_id
+    ).first()
+
+    if not itinerary:
+        raise HTTPException(status_code=403, detail="Tidak punya akses ke itinerary")
+
+    # Ambil semua aktivitas
+    activities = db.query(Activity).filter(
+        Activity.itinerary_id == itinerary_id
+    ).all()
+
+    if not activities:
+        return {"message": "Tidak ada aktivitas untuk ditandai selesai"}
+
+    # Tandai semuanya selesai
+    for act in activities:
+        act.is_completed = True
+
+    db.commit()
+    return {"message": "Semua aktivitas berhasil ditandai selesai"}
+

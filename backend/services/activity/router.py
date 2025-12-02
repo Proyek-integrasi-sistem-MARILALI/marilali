@@ -106,3 +106,19 @@ def reset_day(
     current_user: User = Depends(get_current_user)
 ):
     return controller.reset_day(itinerary_id, day_number, current_user.id, db)
+
+@router.patch("/{itinerary_id}/reset")
+def reset_itinerary(
+    itinerary_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    return controller.reset_itinerary(itinerary_id, current_user.id, db)
+
+@router.patch("/{itinerary_id}/complete-all")
+def complete_all(
+    itinerary_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    return controller.complete_all_activities(itinerary_id, current_user.id, db)
