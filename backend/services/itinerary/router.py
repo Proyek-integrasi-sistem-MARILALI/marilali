@@ -116,3 +116,21 @@ def get_summary(
     current_user: User = Depends(get_current_user)
 ):
     return controller.get_itinerary_summary(itinerary_id, current_user.id, db)
+
+
+@router.post("/{activity_id}/duplicate", response_model=ActivityResponse)
+def duplicate(
+    activity_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    return controller.duplicate_activity(activity_id, current_user.id, db)
+
+
+@router.put("/{activity_id}/complete", response_model=ActivityResponse)
+def mark_complete(
+    activity_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    return controller.mark_completed(activity_id, current_user.id, db)
