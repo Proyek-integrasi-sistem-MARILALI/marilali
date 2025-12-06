@@ -18,7 +18,7 @@ def get_itinerary_summary(itinerary_id: int, user_id: int, db: Session):
         Flight.itinerary_id == itinerary_id
     ).scalar() or 0
 
-    # Total biaya hotel (hotel * jumlah malam)
+    # Total biaya hotel
     total_accommodation = 0
     accommodations = db.query(Accommodation).filter(
         Accommodation.itinerary_id == itinerary_id
@@ -26,7 +26,7 @@ def get_itinerary_summary(itinerary_id: int, user_id: int, db: Session):
 
     for a in accommodations:
         if a.check_in and a.check_out:
-            nights = (a.check_out - a.check_in).days
+            nights = max(0, (a.check_out - a.check_in).days)
             total_accommodation += (a.price_per_night or 0) * nights
 
     # Total biaya aktivitas

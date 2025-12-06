@@ -1,14 +1,19 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
+
 from services.itinerary import controller
-from services.itinerary.summary_schema import ItinerarySummaryResponse
 from services.itinerary.schemas import ItineraryCreate, ItineraryResponse
+from services.itinerary.summary_schema import ItinerarySummaryResponse
+
 from core.security import get_current_user
 from database.connection import get_db
 from database.models import User
 
 router = APIRouter()
 
+# ================================
+#        CREATE ITINERARY
+# ================================
 @router.post("/", response_model=ItineraryResponse)
 def create_itinerary(
     data: ItineraryCreate,
@@ -18,6 +23,9 @@ def create_itinerary(
     return controller.create_itinerary(current_user.id, data, db)
 
 
+# ================================
+#        LIST ITINERARIES
+# ================================
 @router.get("/", response_model=list[ItineraryResponse])
 def list_itineraries(
     db: Session = Depends(get_db),
@@ -26,7 +34,10 @@ def list_itineraries(
     return controller.get_all_itineraries(current_user.id, db)
 
 
-# --- History harus diposisikan sebelum dynamic route ---
+# ================================
+#         HISTORY (COMPLETED)
+# ================================
+# ⚠️ HARUS DIPOSISIKAN SEBELUM /{itinerary_id}
 @router.get("/history", response_model=list[ItineraryResponse])
 def get_history(
     db: Session = Depends(get_db),
@@ -35,7 +46,9 @@ def get_history(
     return controller.get_completed_itineraries(current_user.id, db)
 
 
-# --- Route utama get by ID ---
+# ================================
+#        GET BY ID
+# ================================
 @router.get("/{itinerary_id}", response_model=ItineraryResponse)
 def get_itinerary(
     itinerary_id: int,
@@ -45,6 +58,9 @@ def get_itinerary(
     return controller.get_itinerary_by_id(itinerary_id, current_user.id, db)
 
 
+# ================================
+#      MARK COMPLETE
+# ================================
 @router.put("/{itinerary_id}/complete", response_model=ItineraryResponse)
 def mark_itinerary_complete(
     itinerary_id: int,
@@ -54,6 +70,9 @@ def mark_itinerary_complete(
     return controller.mark_itinerary_complete(itinerary_id, current_user.id, db)
 
 
+# ================================
+#          COPY ITINERARY
+# ================================
 @router.post("/{itinerary_id}/copy", response_model=ItineraryResponse)
 def copy_itinerary(
     itinerary_id: int,
@@ -63,6 +82,9 @@ def copy_itinerary(
     return controller.copy_itinerary(itinerary_id, current_user.id, db)
 
 
+# ================================
+#         DELETE ITINERARY
+# ================================
 @router.delete("/{itinerary_id}")
 def delete_itinerary(
     itinerary_id: int,
@@ -71,6 +93,10 @@ def delete_itinerary(
 ):
     return controller.delete_itinerary(itinerary_id, current_user.id, db)
 
+
+# ================================
+#        SHARE / SET PUBLIC
+# ================================
 @router.put("/{itinerary_id}/share", response_model=ItineraryResponse)
 def share_itinerary_route(
     itinerary_id: int,
@@ -80,6 +106,9 @@ def share_itinerary_route(
     return controller.share_itinerary(itinerary_id, current_user.id, db)
 
 
+# ================================
+#          SUMMARY
+# ================================
 @router.get("/{itinerary_id}/summary", response_model=ItinerarySummaryResponse)
 def get_summary(
     itinerary_id: int,
