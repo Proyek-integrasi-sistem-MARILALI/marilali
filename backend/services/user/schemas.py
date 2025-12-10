@@ -1,6 +1,7 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from datetime import datetime
 from typing import Optional
+
 
 class UserProfileResponse(BaseModel):
     id: int
@@ -13,9 +14,10 @@ class UserProfileResponse(BaseModel):
 
 
 class UserUpdate(BaseModel):
-    name: Optional[str] = None
+    name: Optional[str] = Field(None, min_length=1)
     email: Optional[EmailStr] = None
 
+
 class PasswordChange(BaseModel):
-    old_password: str
-    new_password: str
+    old_password: str = Field(..., min_length=6)
+    new_password: str = Field(..., min_length=6)
