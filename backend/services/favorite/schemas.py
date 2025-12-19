@@ -1,12 +1,12 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from datetime import datetime
 
-# ========== CREATE REQUEST ==========
 class FavoriteDestinationCreate(BaseModel):
-    destination_id: int
+    destination_id: int = Field(..., gt=0, example=12)
 
 class FavoriteItineraryCreate(BaseModel):
-    itinerary_id: int
+    itinerary_id: int = Field(..., gt=0, example=5)
+
 
 
 # ========== RESPONSE SCHEMA ==========
