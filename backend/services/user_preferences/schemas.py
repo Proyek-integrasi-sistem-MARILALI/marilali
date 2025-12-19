@@ -7,7 +7,9 @@ class PreferenceBase(BaseModel):
     max_budget: Optional[int] = None
     weather_preference: Optional[str] = None
 
+
 class PreferenceResponse(PreferenceBase):
     id: int
+
     class Config:
         orm_mode = True
