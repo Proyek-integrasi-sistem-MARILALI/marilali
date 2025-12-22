@@ -9,7 +9,7 @@ from sqlalchemy import (
     Boolean, func
 )
 from sqlalchemy.orm import relationship
-from sqlalchemy.dialects.mysql import JSON
+from sqlalchemy.dialects.postgresql import JSON
 from datetime import datetime
 from database.connection import Base
 
