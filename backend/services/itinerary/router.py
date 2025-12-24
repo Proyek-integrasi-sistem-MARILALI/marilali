@@ -2,8 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from services.itinerary import controller
-from services.itinerary.schemas import ItineraryCreate, ItineraryResponse
-from services.itinerary.summary_schema import ItinerarySummaryResponse
+from services.itinerary.schemas import ItineraryCreate, ItineraryResponse, ActivityResponse
 
 from core.security import get_current_user
 from database.connection import get_db
