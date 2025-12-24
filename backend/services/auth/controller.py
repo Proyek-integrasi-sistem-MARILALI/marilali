@@ -47,13 +47,15 @@ def register_user(user_data, db: Session):
 # ====================================
 def login_user(email: str, password: str, db: Session):
     user = db.query(User).filter(User.email == email).first()
-
-    if not user or not verify_password(password, user.hashed_password):  # FIXED
+    
+    # Mengecek apakah email terdaftar dan password valid
+    if not user or not verify_password(password, user.hashed_password): 
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Email atau password salah."
         )
-
+    
+    # Jika valid, sistem menghasilkan access token dan refresh token
     return {
         "access_token": create_access_token({"sub": user.email}),
         "refresh_token": create_refresh_token({"sub": user.email}),
