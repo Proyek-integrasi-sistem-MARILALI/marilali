@@ -1,24 +1,22 @@
-from services.recommendation.controller import get_recommendations
-from services.weather.controller import get_weather_condition  # dibuat di langkah 5
-from database.models import Destination
+from services.recommendation.controller import generate_recommendations
+from services.weather.controller import get_weather_condition
 from sqlalchemy.orm import Session
 
-def get_planner_recommendations(data, db: Session):
-    # 1. Ambil rekomendasi dasar (kategori, area, budget)
-    base_recommendations = get_recommendations(
-        location=data.location,
-        category=data.category,
-        budget=data.budget,
-        db=db
-    )
 
-    # 2. Dapatkan kondisi cuaca real-time / mock
-    weather = get_weather_condition(data.location)
+def get_planner_recommendations(data, db: Session):
+    # 1. Ambil rekomendasi dasar
+    base = generate_recommendations(data, db)
+
+    destinations = base["destinations"]
+
+    # 2. Ambil kondisi cuaca
+    weather = get_weather_condition(data.location_area)
 
     results = []
 
-    for item in base_recommendations:
+    for item in destinations:
         suitability = "good"
+
         if weather == "rainy" and item["category"] in ["Outdoor", "Beach"]:
             suitability = "bad"
         elif weather == "cloudy" and item["category"] == "Beach":
@@ -30,8 +28,13 @@ def get_planner_recommendations(data, db: Session):
             "category": item["category"],
             "location": item["location"],
             "price": item["price"],
-            "rating": item["average_rating"],
+            "rating": item["rating"],
+            "estimated_cost": item["estimated_cost"],
             "weather_suitability": suitability,
         })
 
-    return results
+    return {
+        "weather": weather,
+        "total_min_cost": base["total_min_cost"],
+        "recommendations": results
+    }

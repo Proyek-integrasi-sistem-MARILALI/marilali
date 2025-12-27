@@ -19,3 +19,4 @@ def test_register_and_login():
     })
     assert res.status_code == 200
     assert "access_token" in res.json()
+
