@@ -1,0 +1,3 @@
+"""
+Favorite service module.
+"""

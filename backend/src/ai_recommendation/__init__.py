@@ -1,0 +1,3 @@
+"""
+AI Recommendation service module.
+"""
