@@ -10,6 +10,8 @@ class VisualCrossingWeatherService:
         self.api_key = settings.VISUAL_CROSSING_API_KEY
         self.base_url = settings.VISUAL_CROSSING_API_URL
         self.default_location = "Bali,Indonesia"
+        self._cache = {}  # Simple in-memory cache: {cache_key: (data, timestamp)}
+        self._cache_ttl = 3600  # Cache TTL: 1 hour in seconds
     
     async def get_forecast(
         self,
@@ -22,6 +24,15 @@ class VisualCrossingWeatherService:
             return self._get_mock_forecast()
         
         location = location or self.default_location
+        
+        # Check cache first
+        cache_key = f"{location}_{start_date}_{end_date}"
+        if cache_key in self._cache:
+            cached_data, cached_time = self._cache[cache_key]
+            age_seconds = (datetime.now() - cached_time).total_seconds()
+            if age_seconds < self._cache_ttl:
+                print(f"[CACHE HIT] Weather for {location} (age: {int(age_seconds)}s)")
+                return cached_data
         
         # Build timeline URL
         if start_date and end_date:
@@ -43,7 +54,14 @@ class VisualCrossingWeatherService:
                 response.raise_for_status()
                 data = response.json()
                 
-                return self._normalize_response(data)
+                normalized_data = self._normalize_response(data)
+                
+                # Cache the successful response
+                if normalized_data:
+                    self._cache[cache_key] = (normalized_data, datetime.now())
+                    print(f"[CACHE STORE] Weather for {location} cached")
+                
+                return normalized_data
                 
         except httpx.HTTPError as e:
             print(f"Weather API error: {e}")

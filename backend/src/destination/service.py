@@ -36,7 +36,7 @@ async def get_destinations(
         )
     
     # Order by rating and pagination
-    query = query.order_by(Destination.average_rating.desc().nullslast())
+    query = query.order_by(Destination.rating.desc().nullslast())
     query = query.offset(skip).limit(limit)
     
     result = await db.execute(query)
@@ -66,10 +66,9 @@ async def get_popular_destinations(
 ) -> List[Destination]:
     result = await db.execute(
         select(Destination)
-        .where(Destination.average_rating.isnot(None))
+        .where(Destination.rating.isnot(None))
         .order_by(
-            Destination.average_rating.desc(),
-            Destination.review_count.desc()
+            Destination.rating.desc()
         )
         .limit(limit)
     )
@@ -110,7 +109,7 @@ async def search_destinations(
                 Destination.city.ilike(search_term)
             )
         )
-        .order_by(Destination.average_rating.desc().nullslast())
+        .order_by(Destination.rating.desc().nullslast())
         .offset(skip)
         .limit(limit)
     )

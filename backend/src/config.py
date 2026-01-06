@@ -60,7 +60,12 @@ class Settings(BaseSettings):
                 self.JWT_REFRESH_SECRET_KEY = "dev-refresh-secret-not-for-production"
     
     # CORS Configuration
-    CORS_ORIGINS: Union[list[str], str] = ["http://localhost:3000", "http://localhost:8000"]
+    # Include frontend development server (Vite default port is 5173)
+    CORS_ORIGINS: Union[list[str], str] = [
+        "http://localhost:3000",
+        "http://localhost:5173",  # Vite dev server
+        "http://localhost:8000"
+    ]
     
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
@@ -99,6 +104,11 @@ class Settings(BaseSettings):
     LANGBASE_PIPE_NAME: str = "bali-travel-planner"
     COHERE_API_KEY: Optional[str] = None
     GEMINI_API_KEY: Optional[str] = None
+    
+    # Amadeus API (Flight & Hotel Search)
+    AMADEUS_API_KEY: Optional[str] = None
+    AMADEUS_API_SECRET: Optional[str] = None
+    AMADEUS_BASE_URL: str = "https://test.api.amadeus.com"  # Use "https://api.amadeus.com" for production
     
     # Rate Limiting
     RATE_LIMIT_ENABLED: bool = True

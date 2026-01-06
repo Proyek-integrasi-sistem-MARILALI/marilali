@@ -80,13 +80,23 @@ async def get_destination_recommendations(
                 "price": float(rec.destination.price) if rec.destination.price else 0,
                 "rating": float(rec.destination.rating) if rec.destination.rating else None,
                 "description": rec.destination.description,
-                "location": rec.destination.location
+                "location": rec.destination.location,
+                "image_url": rec.destination.image_url
             } if rec.destination else None
         }
         
         # Note: weather_context is already in reasoning, no need to duplicate it
         
         response_data.append(rec_dict)
+    
+    # Debug: Log first recommendation's destination data
+    if response_data:
+        first = response_data[0]
+        print(f"[API RESPONSE] Returning {len(response_data)} recommendations")
+        print(f"[API RESPONSE] Sample rec: id={first['id']}, dest_id={first['destination_id']}")
+        if first.get('destination'):
+            dest = first['destination']
+            print(f"[API RESPONSE] Destination fields: name={dest.get('name')}, desc_len={len(dest.get('description', ''))}, img={dest.get('image_url')}")
     
     return response_data
 
@@ -160,3 +170,24 @@ async def get_itinerary_suggestions(
         budget=request.budget,
         db=db
     )
+
+
+@router.post("/clear-cache", status_code=200)
+async def clear_langbase_cache(
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Clear Langbase query cache to force fresh API calls.
+    
+    **Use Case:** Development/testing or when Langbase memory is updated
+    """
+    from src.ai_recommendation.agents import _langbase_cache
+    
+    cache_size = len(_langbase_cache)
+    _langbase_cache.clear()
+    
+    return {
+        "success": True,
+        "message": f"Cleared {cache_size} cached Langbase queries",
+        "cache_ttl_hours": 1
+    }

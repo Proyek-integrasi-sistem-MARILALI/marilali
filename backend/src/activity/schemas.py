@@ -2,6 +2,7 @@ from pydantic import Field, ConfigDict
 from typing import Optional
 from datetime import date, datetime
 from src.schemas import CustomModel
+from src.destination.schemas import DestinationResponse
 
 
 class ActivityBase(CustomModel):
@@ -47,6 +48,7 @@ class ActivityResponse(ActivityBase):
     id: int
     itinerary_id: int
     destination_id: Optional[int] = None
+    destination: Optional[DestinationResponse] = None
     actual_cost: Optional[int] = None
     order_index: int
     is_completed: bool

@@ -88,7 +88,14 @@ async def create_activity(
     
     db.add(activity)
     await db.commit()
-    await db.refresh(activity)
+    
+    # Re-query with eager loading to avoid lazy loading issues
+    result = await db.execute(
+        select(Activity)
+        .options(selectinload(Activity.destination))
+        .where(Activity.id == activity.id)
+    )
+    activity = result.scalar_one()
     
     return activity
 
@@ -205,7 +212,14 @@ async def update_activity(
         setattr(activity, field, value)
     
     await db.commit()
-    await db.refresh(activity)
+    
+    # Re-query with eager loading to avoid lazy loading issues
+    result = await db.execute(
+        select(Activity)
+        .options(selectinload(Activity.destination))
+        .where(Activity.id == activity.id)
+    )
+    activity = result.scalar_one()
     
     return activity
 
@@ -304,6 +318,13 @@ async def mark_activity_complete(
     
     activity.is_completed = completed
     await db.commit()
-    await db.refresh(activity)
+    
+    # Re-query with eager loading to avoid lazy loading issues
+    result = await db.execute(
+        select(Activity)
+        .options(selectinload(Activity.destination))
+        .where(Activity.id == activity.id)
+    )
+    activity = result.scalar_one()
     
     return activity

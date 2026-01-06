@@ -1,9 +1,12 @@
+import time
+import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from src.config import settings
 from src.database import init_db
@@ -21,6 +24,56 @@ from src.notification.router import router as notification_router
 from src.ai_recommendation.router import router as ai_recommendation_router
 from src.weather.router import router as weather_router
 from src.search.router import router as search_router
+from src.transportation.router import router as transportation_router
+from src.accommodation.router import router as accommodation_router
+
+# Configure logging
+logger = logging.getLogger(__name__)
+logging.basicConfig(
+    level=logging.INFO,
+    format='[%(asctime)s] %(levelname)s: %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+
+
+class RequestLoggingMiddleware(BaseHTTPMiddleware):
+    """Middleware to log slow requests and track performance."""
+    
+    SLOW_REQUEST_THRESHOLD = 2.0  # seconds
+    
+    async def dispatch(self, request: Request, call_next):
+        # Start timing
+        start_time = time.time()
+        
+        # Store request info
+        method = request.method
+        path = request.url.path
+        
+        # Process request
+        try:
+            response = await call_next(request)
+            status_code = response.status_code
+        except Exception as exc:
+            # Log uncaught exceptions
+            duration = time.time() - start_time
+            logger.error(
+                f"[ERROR] {method} {path} - Exception: {str(exc)} - Duration: {duration:.2f}s"
+            )
+            raise
+        
+        # Calculate duration
+        duration = time.time() - start_time
+        
+        # Log slow requests
+        if duration >= self.SLOW_REQUEST_THRESHOLD:
+            logger.warning(
+                f"[SLOW REQUEST] {method} {path} - Status: {status_code} - Duration: {duration:.2f}s"
+            )
+        
+        # Add performance header
+        response.headers["X-Process-Time"] = f"{duration:.2f}s"
+        
+        return response
 
 
 @asynccontextmanager
@@ -93,8 +146,12 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 @app.exception_handler(Exception)
 async def general_exception_handler(request: Request, exc: Exception):
-    # Log the exception in production (add proper logging later)
-    print(f"Unhandled exception: {exc}")
+    # Log the exception with full context
+    logger.error(
+        f"[UNHANDLED EXCEPTION] {request.method} {request.url.path} - "
+        f"Type: {type(exc).__name__} - Message: {str(exc)}",
+        exc_info=True  # Include stack trace
+    )
     return JSONResponse(
         status_code=500,
         content={
@@ -104,6 +161,9 @@ async def general_exception_handler(request: Request, exc: Exception):
             "details": str(exc) if settings.DEBUG else None,
         },
     )
+
+# Add request logging middleware (before CORS so it captures everything)
+app.add_middleware(RequestLoggingMiddleware)
 
 app.add_middleware(
     CORSMiddleware,
@@ -125,6 +185,8 @@ app.include_router(notification_router, prefix="/notifications", tags=["Notifica
 app.include_router(ai_recommendation_router, prefix="/ai", tags=["AI Recommendations"])
 app.include_router(weather_router, prefix="/weather", tags=["Weather"])
 app.include_router(search_router, prefix="/search", tags=["Search & Analytics"])
+app.include_router(transportation_router, prefix="/transportation", tags=["Transportation"])
+app.include_router(accommodation_router, prefix="/accommodation", tags=["Accommodation"])
 
 
 @app.get("/", tags=["Root"])

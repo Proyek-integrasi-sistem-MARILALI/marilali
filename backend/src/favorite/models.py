@@ -9,8 +9,8 @@ class FavoriteDestination(Base):
     __tablename__ = "favorite_destinations"
     
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    destination_id = Column(Integer, ForeignKey("destinations.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    destination_id = Column(Integer, ForeignKey("destinations.id", ondelete="CASCADE"), nullable=False, index=True)
     notes = Column(Text, nullable=True)
     added_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     
@@ -23,8 +23,8 @@ class FavoriteItinerary(Base):
     __tablename__ = "favorite_itineraries"
     
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    itinerary_id = Column(Integer, ForeignKey("itineraries.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    itinerary_id = Column(Integer, ForeignKey("itineraries.id", ondelete="CASCADE"), nullable=False, index=True)
     notes = Column(Text, nullable=True)
     added_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     

@@ -24,6 +24,10 @@ from utils.weather_analyzer import analyze_weather_for_travel
 # Load environment variables
 load_dotenv()
 
+# Cache for Langbase queries (key: query_hash, value: {result, timestamp})
+_langbase_cache = {}
+LANGBASE_CACHE_TTL = 432000  
+
 async def get_travel_recommendations(
     user_query: str,
     db: AsyncSession,
@@ -51,18 +55,53 @@ async def get_travel_recommendations(
     # Initialize Langbase client
     langbase = Langbase(api_key=os.getenv('LANGBASE_API_KEY'))
 
-    # Step 1: Retrieve relevant destinations from Langbase memory
-    print(f"\n[SEARCH] Searching for: {user_query}")
+    # Step 1: Check cache first to reduce API calls
+    import hashlib
+    cache_key = hashlib.md5(f"{user_query}_{top_k}".encode()).hexdigest()
     
-    memory_response = langbase.memories.retrieve(
-        memory=[{'name': 'bali-travel-cohere-light'}],
-        query=user_query,
-        top_k=top_k
-    )
-
-    print("\n[OK] Retrieved destinations from Langbase memory")
+    if cache_key in _langbase_cache:
+        cached = _langbase_cache[cache_key]
+        age = datetime.utcnow().timestamp() - cached['timestamp']
+        if age < LANGBASE_CACHE_TTL:
+            print(f"\n[CACHE HIT] Using cached Langbase results (age: {int(age)}s)")
+            memory_response = cached['result']
+        else:
+            print(f"\n[CACHE EXPIRED] Cached data too old ({int(age)}s > {LANGBASE_CACHE_TTL}s)")
+            del _langbase_cache[cache_key]
+            memory_response = None
+    else:
+        memory_response = None
     
-    # Step 2: Extract destination data from memory response
+    # Step 2: If not cached, retrieve from Langbase memory with timeout
+    if memory_response is None:
+        print(f"\n[SEARCH] Searching Langbase for: {user_query}")
+        
+        try:
+            # Timeout after 5 seconds to prevent blocking
+            memory_response = await asyncio.wait_for(
+                asyncio.to_thread(
+                    langbase.memories.retrieve,
+                    memory=[{'name': 'bali-travel-cohere-light'}],
+                    query=user_query,
+                    top_k=top_k
+                ),
+                timeout=5.0
+            )
+            # Cache the successful result
+            _langbase_cache[cache_key] = {
+                'result': memory_response,
+                'timestamp': datetime.utcnow().timestamp()
+            }
+            print("\n[OK] Retrieved destinations from Langbase memory (cached for 1 hour)")
+            
+        except asyncio.TimeoutError:
+            print("[ERROR] Langbase timeout after 5 seconds, using DB fallback")
+            return None
+        except Exception as e:
+            print(f"[ERROR] Langbase failed: {e}, using DB fallback")
+            return None
+    
+    # Step 3: Extract destination data from memory response (cached or fresh)
     destinations_data = _extract_destination_names(memory_response)
     
     if not destinations_data:
@@ -75,10 +114,10 @@ async def get_travel_recommendations(
             "query": user_query
         }
     
-    # Step 3: Query database for full destination details (or create if missing)
+    # Step 4: Query database for full destination details (or create if missing)
     destinations = await _fetch_destinations_from_db(destinations_data, db, budget_max)
     
-    # Step 4: Fetch weather data for travel dates
+    # Step 5: Fetch weather data for travel dates
     weather_context = {}
     if travel_dates and destinations:
         weather_context = await _fetch_weather_for_destinations(
@@ -88,7 +127,7 @@ async def get_travel_recommendations(
         )
         print(f"\n[WEATHER] Fetched weather for {len(weather_context)} destinations")
     
-    # Step 5: Build enriched recommendations
+    # Step 6: Build enriched recommendations
     recommendations = _build_recommendations(
         destinations=destinations,
         weather_context=weather_context,

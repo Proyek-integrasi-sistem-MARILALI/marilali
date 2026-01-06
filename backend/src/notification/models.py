@@ -6,7 +6,7 @@ class Notification(Base):
     __tablename__ = "notifications"
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
-    itinerary_id = Column(Integer, ForeignKey("itineraries.id", ondelete="CASCADE"), nullable=True)
+    itinerary_id = Column(Integer, ForeignKey("itineraries.id", ondelete="CASCADE"), nullable=True, index=True)
     notification_type = Column(String(50), nullable=False)
     title = Column(String(200), nullable=False)
     message = Column(Text, nullable=False)
