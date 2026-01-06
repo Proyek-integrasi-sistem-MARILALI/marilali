@@ -3,6 +3,8 @@ from pydantic import field_validator
 from typing import Optional, Union
 
 
+import os
+
 class Settings(BaseSettings):
     # Application
     APP_NAME: str = "Bali Travel Planner"
@@ -15,7 +17,7 @@ class Settings(BaseSettings):
     DESTINATION_SCOPE: str = "bali"  # Application is limited to Bali only
     
     # Database Configuration
-    DATABASE_URL: str = "postgresql+asyncpg://postgres:password@localhost:5432/travel_planner"
+    DATABASE_URL: str = os.getenv("DATABASE_URL")
     DB_POOL_SIZE: int = 20
     DB_MAX_OVERFLOW: int = 10
     DB_POOL_TIMEOUT: int = 30
